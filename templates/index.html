@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Speech Emotion Classification</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+
+    <!-- Chart.js for Waveform -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+
+  <body>
+    <!-- HOME LANDING PAGE -->
+    <div id="home">
+      <div class="browser">
+        <div class="browser-top">
+          <span class="circle red"></span>
+          <span class="circle yellow"></span>
+          <span class="circle green"></span>
+
+          <div class="tab">Speech Emotion Classification</div>
+        </div>
+
+        <div class="address">🔒 http://127.0.0.1:5000</div>
+      </div>
+
+      <div class="home-content">
+        <div class="university">
+          <img src="./static/images/logo.png" class="logo" alt="Logo 1" />
+
+          <div>
+            <h2>Technological University Kyaukse</h2>
+
+            <p>Department of Computer Engineering</p>
+
+            <p>and Information Technology</p>
+          </div>
+
+          <img src="./static/images/image.png" class="logo" alt="Logo 2" />
+        </div>
+
+        <div class="home-center">
+          <h1>Speech Emotion Classification</h1>
+
+          <h2>
+            Using Acoustic Features and a Multi-Layer Perceptron Classifier
+          </h2>
+
+          <button class="start" onclick="startSystem()">Start</button>
+        </div>
+
+        <div class="footer">
+          <div>
+            <b>Supervised by</b>
+            <br />
+
+            Dr.Nah Mo Kham
+          </div>
+
+          <div>
+            <b>Presented by</b>
+            <br />
+
+            Ma Khin Kabyar
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN APP DASHBOARD -->
+    <div class="app-container">
+      <!-- 1. LEFT SIDEBAR -->
+      <aside class="sidebar">
+        <div
+          class="menu-item active"
+          id="menuHome"
+          onclick="navigateTo('home')"
+        >
+          🏠 Home
+        </div>
+        <div
+          class="menu-item"
+          id="menuUpload"
+          onclick="navigateTo('upload-section')"
+        >
+          📁 Upload Audio
+        </div>
+        <div
+          class="menu-item"
+          id="menuFeatures"
+          onclick="navigateTo('features-section')"
+        >
+          📊 View Features
+        </div>
+
+        <hr />
+
+        <h2>Acoustic Features</h2>
+        <label> ☑ MFCC (40) </label>
+        <label> ☑ Chroma (12) </label>
+        <label> ☑ Mel Spectrogram (128) </label>
+      </aside>
+
+      <!-- 2. CENTER MAIN CONTENT (ONLY SECTION 1 & SECTION 2 INSIDE HERE) -->
+      <main class="main-content">
+        <!-- 1. LOAD AUDIO SECTION -->
+        <section class="card" id="upload-section">
+          <h2>1. Load Audio File</h2>
+
+          <div class="upload-box" id="dropArea">
+            <div class="cloud-icon">☁</div>
+            <label for="audioFile" class="browse-btn"> 📁 Browse File </label>
+            <input type="file" id="audioFile" accept=".wav" hidden />
+            <p class="supported">Supported formats: .wav</p>
+          </div>
+
+          <!-- AUDIO INFORMATION -->
+          <div class="audio-info">
+            <p>
+              <strong>File Name:</strong>
+              <span id="fileName"> No file selected </span>
+            </p>
+            <p><strong>Duration:</strong> <span id="duration"> - </span></p>
+            <p>
+              <strong>Sample Rate:</strong> <span id="sampleRate"> - </span>
+            </p>
+          </div>
+
+          <!-- ORIGINAL AUDIO -->
+          <div class="audio-players-grid">
+            <div class="card-inner">
+              <h3>Original Audio</h3>
+              <audio
+                id="originalAudioPlayer"
+                controls
+                style="width: 100%; margin-top: 10px"
+              ></audio>
+            </div>
+          </div>
+
+          <!-- WAVEFORM VIEW -->
+          <div id="waveformSection" style="display: none; margin-top: 20px">
+            <div class="card-inner waveform-card">
+              <h3>🎵 Original Waveform</h3>
+              <div class="waveform-container">
+                <canvas id="originalWaveform"></canvas>
+              </div>
+            </div>
+
+            <div class="card-inner waveform-card" style="margin-top: 20px">
+              <h3>📈 Pre-emphasized Waveform</h3>
+              <p class="waveform-description">
+                Pre-emphasis coefficient: <strong>α = 0.97</strong>
+              </p>
+              <div class="waveform-container">
+                <canvas id="preEmphasisWaveform"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- ACTION BUTTONS -->
+
+          <div style="margin-top: 15px">
+            <button id="extractFeaturesBtn" class="extract-btn" disabled>
+              📊 Extract Features
+            </button>
+            <button id="classifyBtn" class="classify-btn" disabled>
+              🎯 Classify Emotion
+            </button>
+            <button type="button" class="clear-btn" onclick="clearAll()">
+              🗑 Clear
+            </button>
+          </div>
+        </section>
+
+        <!-- 2. EXTRACTED FEATURES SECTION -->
+        <section class="card" id="features-section">
+          <h2>2. Extracted Acoustic Features</h2>
+          <div class="feature-note">
+            Pre-emphasis filter is applied first, then features are extracted
+            and combined before being given to the MLP classifier.
+          </div>
+
+          <!-- GUI Desktop Style Container -->
+          <div class="gui-feature-container">
+            <div class="gui-sidebar">
+              <div class="gui-sidebar-header">Feature Views</div>
+              <button
+                type="button"
+                class="gui-tab-btn active"
+                id="btnMFCC"
+                onclick="switchFeatureTab('MFCC')"
+              >
+                MFCC
+              </button>
+              <button
+                type="button"
+                class="gui-tab-btn"
+                id="btnChroma"
+                onclick="switchFeatureTab('Chroma')"
+              >
+                Chroma
+              </button>
+              <button
+                type="button"
+                class="gui-tab-btn"
+                id="btnMel"
+                onclick="switchFeatureTab('Mel')"
+              >
+                Mel Spectrogram
+              </button>
+            </div>
+
+            <div class="gui-main-panel">
+              <div class="gui-status-bar" id="featureStatusText">
+                Showing 80 MFCC features
+              </div>
+              <div class="gui-table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Feature</th>
+                      <th>Type</th>
+                      <th style="text-align: right">Value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="featureTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+      <!-- </main> တဂ်ကို ဒီမှာမှ ပိတ်ရပါမည် -->
+
+      <!-- 3. RIGHT PANEL (MUST BE OUTSIDE <main> AND DIRECT CHILD OF .app-container) -->
+      <aside class="right-panel">
+        <section class="result-card">
+          <h2>Classification Result</h2>
+          <div class="prediction-box">
+            <p>Predicted Emotion</p>
+            <h1 id="emotionResult">---</h1>
+          </div>
+
+          <h2>Emotion Probabilities</h2>
+          <div id="probabilities" class="probabilities"></div>
+        </section>
+
+        <!-- MLP MODEL INFORMATION -->
+        <section class="model-card" id="settings-section">
+          <h2>⚙ MLP Model Information</h2>
+          <p><strong>Classifier:</strong> MLP</p>
+          <p><strong>Hidden Layers:</strong> (512, 256)</p>
+          <p><strong>Activation:</strong> ReLU</p>
+          <p><strong>Solver:</strong> Adam</p>
+          <p><strong>Batch Size:</strong> 32</p>
+        </section>
+      </aside>
+    </div>
+
+    <!-- MAIN JAVASCRIPT -->
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  </body>
+</html>

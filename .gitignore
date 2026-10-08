@@ -1,0 +1,7 @@
+RAVDESS/
+uploads/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.envaudio/
